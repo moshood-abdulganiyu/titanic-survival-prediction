@@ -1,54 +1,45 @@
-"""
-Loading the trained model and predicting on a single passenger.
+"""Load the trained pipeline and predict from a single raw passenger record.
 
-The saved artifact is a full sklearn Pipeline (scaler + classifier), so
-there's no manual scaling step here - .predict() does it internally. This
-is the whole point of exporting a Pipeline instead of a bare model plus a
-separate scaler file: one artifact, one call, no place for training/serving
-scaling to drift apart.
+Serving-time input is assumed complete (Step 4's FastAPI layer enforces
+required fields via Pydantic), so this only needs to encode and order
+columns to match training, not impute missing values. Imputation logic
+in preprocess.clean() is a training-time concern only.
 """
-
 import json
 from pathlib import Path
 
 import joblib
 import pandas as pd
 
-from .preprocess import FEATURE_COLUMNS, engineer_features
+from .preprocess import engineer_features
 
-ARTIFACTS_DIR = Path(__file__).resolve().parent.parent / "data" / "artifacts"
-MODEL_PATH = ARTIFACTS_DIR / "titanic_model.joblib"
-COLUMNS_PATH = ARTIFACTS_DIR / "titanic_columns.json"
+_ARTIFACTS_DIR = Path(__file__).resolve().parent.parent / "data" / "artifacts"
 
+_model = joblib.load(_ARTIFACTS_DIR / "titanic_model.joblib")
 
-def load_artifacts():
-    """Load the fitted pipeline and the expected feature column order."""
-    model = joblib.load(MODEL_PATH)
-    with open(COLUMNS_PATH) as f:
-        columns = json.load(f)["columns"]
-    return model, columns
+with open(_ARTIFACTS_DIR / "titanic_columns.json") as f:
+    _COLUMNS = json.load(f)["columns"]
 
 
-def predict_one(raw: dict, model=None, columns=None) -> int:
-    """Predict survival (0/1) for a single passenger.
-
-    raw must contain: Pclass, Sex ("male"/"female"), Age, SibSp, Parch,
-    Fare, Embarked ("C"/"Q"/"S"). This is exactly what a filled-in form
-    submission gives you, so no imputation is needed here - that's a
-    training-time concern (see preprocess.clean_data), not a serving-time
-    one.
+def predict_one(passenger: dict) -> dict:
     """
-    if model is None or columns is None:
-        model, columns = load_artifacts()
+    passenger keys: Pclass, Sex, Age, SibSp, Parch, Fare, Embarked
+      - Sex: "male" or "female"
+      - Embarked: "C", "Q", or "S"
 
-    row = pd.DataFrame([raw])
-    row = engineer_features(row)
+    Returns {"survived": 0 or 1, "probability": float}
+    """
+    df = pd.DataFrame([passenger])
+    df = engineer_features(df)
 
-    # A single row only produces one-hot columns for the category it
-    # actually has (e.g. Embarked="S" won't create an Embarked_Q column at
-    # all). Reindexing to the training column order fills the rest with 0,
-    # which is exactly what "not that category" should look like.
-    row = row.reindex(columns=columns, fill_value=0)
+    # Reindex to the exact training column order. A single row's Embarked
+    # value only produces one dummy column at most (e.g. Embarked='C'
+    # produces neither Embarked_Q nor Embarked_S), so any column the
+    # pipeline expects but this row didn't generate gets filled with 0 —
+    # equivalent to "not that category" for a one-hot column.
+    df = df.reindex(columns=_COLUMNS, fill_value=0)
 
-    prediction = model.predict(row)[0]
-    return int(prediction)
+    prediction = int(_model.predict(df)[0])
+    probability = float(_model.predict_proba(df)[0][1])
+
+    return {"survived": prediction, "probability": round(probability, 3)}
