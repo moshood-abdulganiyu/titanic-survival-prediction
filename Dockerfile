@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
-# HF Spaces builds run as a non-root user by convention; this avoids
-# permission errors on the mounted filesystem at runtime.
+# Running as non-root is good practice for any container host, not just
+# HF Spaces: it limits blast radius if the app is ever compromised.
 RUN useradd -m appuser
 WORKDIR /app
 
@@ -14,7 +14,11 @@ COPY . .
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# HF Spaces' Docker SDK expects the app to listen on 7860.
-EXPOSE 7860
+# Render assigns the listen port at runtime via $PORT, it isn't fixed like
+# HF Spaces' 7860. EXPOSE is documentation only (doesn't bind anything),
+# 8000 here just matches the default used for local `docker run` testing.
+EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Shell form (not exec/array form) so $PORT actually expands. Falls back to
+# 8000 if PORT isn't set, e.g. running this image locally with `docker run`.
+CMD uv run uvicorn server.main:app --host 0.0.0.0 --port ${PORT:-8000}
