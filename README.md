@@ -1,3 +1,9 @@
-# Titanic Survival Prediction
-
-End-to-end ML project: EDA → model → FastAPI backend → frontend → deployed on Hugging Face Spaces.
+---
+title: Titanic Survival Prediction
+emoji: 🚢
+colorFrom: blue
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+---

@@ -1,0 +1,11 @@
+[project]
+name = "titanic-survival-prediction"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "gradio>=6.27.0",
+    "pydantic>=2.13.5",
+]

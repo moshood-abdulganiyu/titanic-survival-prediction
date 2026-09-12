@@ -11,7 +11,7 @@ const submitButtonDefaultText = submitButton.textContent;
 
 // Local FastAPI dev server from Step 4/5. This is the one line to
 // change when Step 8 points the frontend at the deployed HF Space.
-const API_URL = "http://127.0.0.1:8000/predict";
+const API_URL = "/predict";  // "http://127.0.0.1:8000/predict"
 
 // Friendlier validity messages, matching the PassengerInput bounds in
 // server/schemas.py. Kept in one place so a schema change only needs
