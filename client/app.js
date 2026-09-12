@@ -9,9 +9,10 @@ const iconNotSurvived = document.querySelector(".icon-not-survived");
 const submitButton = form.querySelector(".submit-btn");
 const submitButtonDefaultText = submitButton.textContent;
 
-// Local FastAPI dev server from Step 4/5. This is the one line to
-// change when Step 8 points the frontend at the deployed HF Space.
-const API_URL = "/predict";  // "http://127.0.0.1:8000/predict"
+// Live FastAPI backend on Render. Frontend and backend are on different
+// origins now (split deployment, Step 8), so this must be absolute, not
+// a relative path like the old same-origin setup used.
+const API_URL = "https://titanic-survival-prediction-o1fp.onrender.com/predict";
 
 // Friendlier validity messages, matching the PassengerInput bounds in
 // server/schemas.py. Kept in one place so a schema change only needs
