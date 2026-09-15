@@ -2,7 +2,7 @@
 
 End-to-end ML portfolio project: EDA, model training, FastAPI backend, and a static frontend, deployed live across two services.
 
-**Live demo:** [Frontend](https://huggingface.co/spaces/AbdukganiyMK/titanic-survival-prediction-frontend)
+**Live demo:** [Frontend](https://huggingface.co/spaces/moshood-abdulganiyu/titanic-survival-prediction-frontend)
 **API docs:** [https://titanic-survival-prediction-o1fp.onrender.com/docs](https://titanic-survival-prediction-o1fp.onrender.com/docs)
 
 ![App screenshot](screenshots/demo.png)
